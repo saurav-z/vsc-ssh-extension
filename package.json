@@ -1,0 +1,285 @@
+{
+  "name": "vsc-ssh-extension",
+  "displayName": "Remote SSH (Open Source)",
+  "description": "Full-featured Remote SSH support for Antigravity, VSCodium, and other open-source forks. Supports remote workspaces, terminal, and debugging.",
+  "version": "1.0.0",
+  "publisher": "saurav-z",
+  "author": {
+    "name": "Saurav Phuyal",
+    "url": "https://saurav-phuyal.com.np/"
+  },
+  "icon": "resources/icon.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saurav-z/vsc-ssh-extension.git"
+  },
+  "homepage": "https://github.com/saurav-z/vsc-ssh-extension#readme",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "remote",
+    "ssh",
+    "antigravity",
+    "remote development",
+    "remote workspace"
+  ],
+  "enabledApiProposals": [
+    "resolvers",
+    "tunnels",
+    "terminalDataWriteEvent"
+  ],
+  "activationEvents": [
+    "onResolveRemoteAuthority:ssh-remote",
+    "onCommand:sshRemote.connect",
+    "onCommand:sshRemote.addHost",
+    "onCommand:sshRemote.openConfig",
+    "onCommand:sshRemote.showHosts",
+    "onCommand:sshRemote.removeHost",
+    "onCommand:sshRemote.openTerminal",
+    "onCommand:sshRemote.copyRemotePath",
+    "onView:sshRemote.hosts"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sshRemote.connect",
+        "title": "Remote-SSH: Connect to Host...",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(vm-connect)"
+      },
+      {
+        "command": "sshRemote.addHost",
+        "title": "Remote-SSH: Add New SSH Host...",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(add)"
+      },
+      {
+        "command": "sshRemote.openConfig",
+        "title": "Remote-SSH: Open SSH Configuration File...",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "sshRemote.showHosts",
+        "title": "Remote-SSH: Show All SSH Hosts",
+        "category": "Remote SSH (Open Source)"
+      },
+      {
+        "command": "sshRemote.removeHost",
+        "title": "Remote-SSH: Remove Host",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "sshRemote.openTerminal",
+        "title": "Remote-SSH: Open Terminal on Host",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "sshRemote.copyRemotePath",
+        "title": "Remote-SSH: Copy Remote Path",
+        "category": "Remote SSH (Open Source)"
+      },
+      {
+        "command": "sshRemote.refreshHosts",
+        "title": "Refresh",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sshRemote.connectInNewWindow",
+        "title": "Remote-SSH: Connect to Host in New Window",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(empty-window)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sshRemote",
+          "title": "Remote SSH",
+          "icon": "resources/activity-bar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "sshRemote": [
+        {
+          "id": "sshRemote.hosts",
+          "name": "SSH Targets",
+          "icon": "resources/activity-bar-icon.svg",
+          "contextualTitle": "SSH Hosts"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "sshRemote.connect",
+          "when": "view == sshRemote.hosts",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sshRemote.addHost",
+          "when": "view == sshRemote.hosts",
+          "group": "navigation@2"
+        },
+        {
+          "command": "sshRemote.refreshHosts",
+          "when": "view == sshRemote.hosts",
+          "group": "navigation@3"
+        },
+        {
+          "command": "sshRemote.openConfig",
+          "when": "view == sshRemote.hosts",
+          "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sshRemote.connect",
+          "when": "view == sshRemote.hosts && viewItem == host",
+          "group": "inline@1"
+        },
+        {
+          "command": "sshRemote.connectInNewWindow",
+          "when": "view == sshRemote.hosts && viewItem == host",
+          "group": "inline@2"
+        },
+        {
+          "command": "sshRemote.openTerminal",
+          "when": "view == sshRemote.hosts && viewItem == host",
+          "group": "inline@3"
+        },
+        {
+          "command": "sshRemote.removeHost",
+          "when": "view == sshRemote.hosts && viewItem == host",
+          "group": "inline@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sshRemote.connect"
+        },
+        {
+          "command": "sshRemote.addHost"
+        },
+        {
+          "command": "sshRemote.openConfig"
+        },
+        {
+          "command": "sshRemote.showHosts"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Remote SSH (Open Source)",
+      "properties": {
+        "sshRemote.sshConfigPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the SSH config file. Defaults to ~/.ssh/config."
+        },
+        "sshRemote.defaultUsername": {
+          "type": "string",
+          "default": "",
+          "description": "Default username to use when connecting to a host (if not specified in SSH config)."
+        },
+        "sshRemote.connectTimeout": {
+          "type": "number",
+          "default": 15,
+          "description": "Number of seconds to wait when connecting to a remote host."
+        },
+        "sshRemote.enableAgentForwarding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable SSH agent forwarding when connecting to remote hosts."
+        },
+        "sshRemote.serverInstallPath": {
+          "type": "string",
+          "default": "~/.code-server",
+          "description": "The directory on the remote host where the server will be installed."
+        },
+        "sshRemote.remoteServerListenOnSocket": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, the remote server communicates over a Unix domain socket instead of a TCP port."
+        },
+        "sshRemote.logLevel": {
+          "type": "string",
+          "enum": [
+            "off",
+            "error",
+            "warn",
+            "info",
+            "debug",
+            "trace"
+          ],
+          "default": "info",
+          "description": "Log verbosity level for the extension."
+        },
+        "sshRemote.knownHostsFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional known_hosts files to consult when verifying host fingerprints."
+        },
+        "sshRemote.jumpHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "ProxyJump hosts to tunnel through (format: user@host:port)."
+        }
+      }
+    },
+    "resourceLabelFormatters": [
+      {
+        "scheme": "vscode-remote",
+        "authority": "ssh-remote+*",
+        "formatting": {
+          "label": "${path}",
+          "separator": "/",
+          "tildify": true,
+          "workspaceSuffix": "SSH: ${authority}"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production",
+    "compile:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ssh2": "^1.11.19",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vscode/vsce": "^2.26.0",
+    "eslint": "^8.57.0",
+    "file-loader": "^6.2.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "ssh2": "^1.15.0"
+  }
+}

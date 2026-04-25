@@ -1,0 +1,13 @@
+# Exclude dev/build artefacts — keep dist/ and resources/
+.vscode/**
+node_modules/**
+out/**
+src/**
+.gitignore
+.vscodeignore
+webpack.config.js
+tsconfig.json
+**/*.map
+CONTEXT.md
+# Keep these (do NOT add dist/ or resources/ here)
+
