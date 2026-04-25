@@ -12,6 +12,7 @@ import { StatusBar } from './statusBar';
 
 export class RemoteAuthorityResolverImpl {
     private connections: Map<string, { client: SshClient; localPort: number }> = new Map();
+    public onClientConnected?: (client: SshClient) => void;
 
     constructor(
         private readonly serverManager: ServerManager,
@@ -34,6 +35,7 @@ export class RemoteAuthorityResolverImpl {
             if (existing) {
                 this.logger.debug(`Reusing existing connection to "${hostAlias}" on local port ${existing.localPort}`);
                 this.statusBar.setConnected(hostAlias);
+                if (this.onClientConnected) { this.onClientConnected(existing.client); }
                 return this.makeResolvedAuthority('localhost', existing.localPort);
             }
 
@@ -55,6 +57,20 @@ export class RemoteAuthorityResolverImpl {
             });
             throw err;
         }
+    }
+
+    /**
+     * Manually forward a remote port to a local port.
+     */
+    async forwardPort(hostAlias: string, remotePort: number, localPort?: number): Promise<number> {
+        const conn = this.connections.get(hostAlias);
+        if (!conn) {
+            throw new Error(`No active connection to "${hostAlias}".`);
+        }
+
+        const pickedLocalPort = await this.forwardRemotePort(conn.client, remotePort, localPort);
+        this.logger.info(`Manual port forward established: localhost:${pickedLocalPort} → remote:${remotePort}`);
+        return pickedLocalPort;
     }
 
     // ─── Private Helpers ──────────────────────────────────────────
@@ -84,6 +100,8 @@ export class RemoteAuthorityResolverImpl {
             this.statusBar.setDisconnected();
         });
         this.connections.set(hostAlias, { client, localPort });
+
+        if (this.onClientConnected) { this.onClientConnected(client); }
 
         return localPort;
     }
@@ -219,12 +237,12 @@ export class RemoteAuthorityResolverImpl {
         });
     }
 
-    private forwardRemotePort(client: SshClient, remotePort: number): Promise<number> {
+    private forwardRemotePort(client: SshClient, remotePort: number, preferredLocalPort?: number): Promise<number> {
         return new Promise((resolve, reject) => {
-            // Let OS pick a free local port
+            // Let OS pick a free local port or use preferred
             const net = require('net');
             const server = net.createServer();
-            server.listen(0, '127.0.0.1', () => {
+            server.listen(preferredLocalPort ?? 0, '127.0.0.1', () => {
                 const localPort = (server.address() as any).port;
                 server.close();
 

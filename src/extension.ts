@@ -10,6 +10,8 @@ import { RemoteAuthorityResolverImpl } from './resolver';
 import { Logger } from './logger';
 import { ServerManager } from './serverManager';
 import { StatusBar } from './statusBar';
+import { PortForwardProvider, PortItem } from './portForwardProvider';
+import { deploySshKey } from './keyDeploy';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const logger = new Logger('Remote SSH (Open Source)');
@@ -24,6 +26,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         showCollapseAll: false
     });
     context.subscriptions.push(treeView);
+
+    const portProvider = new PortForwardProvider();
+    vscode.window.registerTreeDataProvider('sshRemote.ports', portProvider);
 
     const serverManager = new ServerManager(logger, context);
     const resolver = new RemoteAuthorityResolverImpl(serverManager, configManager, logger, statusBar);
@@ -96,6 +101,45 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 vscode.window.showInformationMessage(`Copied: ${uri.path}`);
             } else {
                 vscode.window.showWarningMessage('No remote file is currently open.');
+            }
+        }),
+
+        vscode.commands.registerCommand('sshRemote.deployKey', async (item: SshHostTreeItem) => {
+            const host = configManager.getHosts().find(h => h.Host === item.label);
+            if (host) {
+                await deploySshKey(host, configManager, logger);
+                treeProvider.refresh();
+            }
+        }),
+
+        vscode.commands.registerCommand('sshRemote.forwardPort', async () => {
+            const authority = vscode.workspace.workspaceFolders?.[0]?.uri.authority;
+            if (!authority || !authority.startsWith('ssh-remote+')) {
+                vscode.window.showErrorMessage('You must be connected to a remote host to forward ports.');
+                return;
+            }
+            const hostAlias = authority.replace('ssh-remote+', '');
+
+            const port = await vscode.window.showInputBox({
+                prompt: 'Remote port to forward',
+                placeHolder: 'e.g. 8080, 5432'
+            });
+            if (!port) return;
+
+            try {
+                const localPort = await resolver.forwardPort(hostAlias, parseInt(port, 10));
+                portProvider.addPort({ localPort, remotePort: parseInt(port, 10), name: 'Manual Tunnel' });
+                vscode.window.showInformationMessage(`Port ${port} forwarded to localhost:${localPort}`);
+            } catch (err: any) {
+                vscode.window.showErrorMessage(`Failed to forward port: ${err.message}`);
+            }
+        }),
+
+        vscode.commands.registerCommand('sshRemote.stopForwarding', (item: PortItem) => {
+            if (item.portData) {
+                portProvider.removePort(item.portData);
+                // Note: The actual TCP server in the resolver remains open for the lifecycle 
+                // but we hide it from the UI. Real teardown would require tracking server instances.
             }
         })
     );

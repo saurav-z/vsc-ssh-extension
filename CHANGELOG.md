@@ -3,6 +3,13 @@
 All notable changes to this extension will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] — 2026-04-25
+
+### Added
+- **SSH Key Deployment:** One-click setup for passwordless login.
+- **Quick Terminal:** Open a remote SSH terminal directly from the sidebar.
+- **Port Forwarding Manager:** Manual tunnel management for remote services.
+
 ## [1.0.0] — 2026-04-25
 
 ### Added

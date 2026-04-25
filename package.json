@@ -2,7 +2,7 @@
   "name": "vsc-ssh-extension",
   "displayName": "Remote SSH (Open Source)",
   "description": "Full-featured Remote SSH support for Antigravity, VSCodium, and other open-source forks. Supports remote workspaces, terminal, and debugging.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "saurav-z",
   "author": {
     "name": "Saurav Phuyal",
@@ -88,16 +88,22 @@
         "category": "Remote SSH (Open Source)"
       },
       {
-        "command": "sshRemote.refreshHosts",
-        "title": "Refresh",
+        "command": "sshRemote.deployKey",
+        "title": "Remote-SSH: Setup Passwordless Login (Deploy Key)",
         "category": "Remote SSH (Open Source)",
-        "icon": "$(refresh)"
+        "icon": "$(key)"
       },
       {
-        "command": "sshRemote.connectInNewWindow",
-        "title": "Remote-SSH: Connect to Host in New Window",
+        "command": "sshRemote.forwardPort",
+        "title": "Forward a Port...",
         "category": "Remote SSH (Open Source)",
-        "icon": "$(empty-window)"
+        "icon": "$(add)"
+      },
+      {
+        "command": "sshRemote.stopForwarding",
+        "title": "Stop Forwarding",
+        "category": "Remote SSH (Open Source)",
+        "icon": "$(close)"
       }
     ],
     "viewsContainers": {
@@ -116,6 +122,11 @@
           "name": "SSH Targets",
           "icon": "resources/activity-bar-icon.svg",
           "contextualTitle": "SSH Hosts"
+        },
+        {
+          "id": "sshRemote.ports",
+          "name": "Forwarded Ports",
+          "contextualTitle": "Tunnels"
         }
       ]
     },
@@ -137,9 +148,9 @@
           "group": "navigation@3"
         },
         {
-          "command": "sshRemote.openConfig",
-          "when": "view == sshRemote.hosts",
-          "group": "navigation@4"
+          "command": "sshRemote.forwardPort",
+          "when": "view == sshRemote.ports",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [
@@ -149,19 +160,24 @@
           "group": "inline@1"
         },
         {
-          "command": "sshRemote.connectInNewWindow",
+          "command": "sshRemote.deployKey",
           "when": "view == sshRemote.hosts && viewItem == host",
-          "group": "inline@2"
+          "group": "inline@5"
         },
         {
           "command": "sshRemote.openTerminal",
           "when": "view == sshRemote.hosts && viewItem == host",
-          "group": "inline@3"
+          "group": "inline@2"
+        },
+        {
+          "command": "sshRemote.stopForwarding",
+          "when": "view == sshRemote.ports && viewItem == port",
+          "group": "inline"
         },
         {
           "command": "sshRemote.removeHost",
           "when": "view == sshRemote.hosts && viewItem == host",
-          "group": "inline@4"
+          "group": "inline@10"
         }
       ],
       "commandPalette": [
